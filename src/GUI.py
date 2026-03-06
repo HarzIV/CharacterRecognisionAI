@@ -1,5 +1,6 @@
 import tkinter as tk
 from PIL import Image, ImageGrab
+from numpy import argmax
 
 from ImageManipulation import ImMan
 from ai import predictCharacter
@@ -57,7 +58,7 @@ class GUI:
         image = ImageGrab.grab((self.drawingCanvas.winfo_rootx(), self.drawingCanvas.winfo_rooty(), (self.drawingCanvas.winfo_rootx()+self.drawingCanvas.winfo_width()), (self.drawingCanvas.winfo_rooty()+self.drawingCanvas.winfo_height())))
 
         return image
-    
+
     def evaluateCanvas(self, event) -> None:
         image = self.getCanvas()
         ImMan.savePILImage(image)
@@ -65,11 +66,11 @@ class GUI:
         processedImages = ImMan.getCharacterImages(image=image)
 
         for image in processedImages:
-            predictions = predictCharacter("models/digit_model.h5", image)
+            predictions = predictCharacter("models/digit_model.keras", image)
 
-            percentage = max(predictions)
+            # percentage = max(predictions)
             print(predictions)
-            print(percentage)
+            print(argmax(predictions))
 
             # print(f"The character is: {predictions.tolist().index(percentage)}, with a likelyhood of {percentage}%.")
     

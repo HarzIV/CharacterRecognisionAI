@@ -1,11 +1,11 @@
 import cv2
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageDraw
 
 class ImMan:
     @staticmethod
     def savePILImage(image: Image) -> None:
-        image.save("tmp/Raw.jpeg")
+        image.save("tmp/Raw.png")
     
     @staticmethod
     def saveMatrixAsImg(matrix: np.ndarray):
@@ -56,15 +56,77 @@ class ImMan:
         return images
     
     @staticmethod
-    def findBoundingBox(image: Image) -> tuple:
-        boundingBox = image.getbbox()
+    def findBoundingBox(stat: np.ndarray) -> tuple:
+        x = stat[0]
+        y = stat[1]
+        w = stat[2]
+        h = stat[3]
+
+        boundingBox = x, y, x + w, y + h
     
         return boundingBox
 
     @classmethod
-    def cropImages(self, image: Image) -> Image:
-        boundingBox = self.findBoundingBox(image)
-        croppedImage = image.convert("L").crop(boundingBox)
+    def cropImages(self, image: Image, stat: np.ndarray) -> Image:
+        boundingBox = self.findBoundingBox(stat)
+        print(boundingBox)
+        croppedImage = image.crop(boundingBox)
+        
+        
+        x1, y1, x2, y2 = boundingBox
+        rect =  [x1, y1, x2, y2]
+        draw = ImageDraw.Draw(image)
+        draw.rectangle(rect, outline="red", width=3)
+        image.save(f"tmp/boxDrawn.png")
+
+
+        return croppedImage
+    
+    @staticmethod
+    def findBoundingBoxV2(image: Image):
+        BORDER = 5
+        pixels = image.load()
+        w, h = image.size
+
+        rx1, ry1, rx2, ry2 = w, h, 0, 0
+
+        # Find bounding box of non-white pixels
+        for y in range(BORDER, h - BORDER):
+            for x in range(BORDER, w - BORDER):
+                print("Pixels: ", pixels[x, y])
+                value = pixels[x, y]
+                if value != 255:
+                    rx1 = min(rx1, x)
+                    ry1 = min(ry1, y)
+                    rx2 = max(rx2, x)
+                    ry2 = max(ry2, y)
+
+        # Compute width and height
+        nw, nh = rx2 - rx1 + 1, ry2 - ry1 + 1
+
+        # Make square by expanding the smaller dimension
+        if nw > nh:
+            diff = nw - nh
+            ry1 -= diff // 2
+            ry2 += diff - diff // 2
+        else:
+            diff = nh - nw
+            rx1 -= diff // 2
+            rx2 += diff - diff // 2
+
+        # Clamp to image boundaries
+        rx1 = max(0, rx1)
+        ry1 = max(0, ry1)
+        rx2 = min(w - 1, rx2)
+        ry2 = min(h - 1, ry2)
+
+        return rx1, ry1, rx2, ry2
+    
+    @classmethod
+    def cropV2(self, image: Image) -> Image:
+        boundingBox = self.findBoundingBoxV2(image)
+        
+        croppedImage = image.crop(boundingBox)
 
         return croppedImage
 
@@ -77,18 +139,26 @@ class ImMan:
     @classmethod
     def getCharacterImages(self, image: Image) -> list:
         num_labels, labels, stats, centroids = self.findPixelGroups(image)
-        images = self.isolateImages(labels, num_labels)
-        print(type(image))
+        print(stats)
+        stats = stats[1:]
+        print(stats)
         
+        images = self.isolateImages(labels, num_labels)
+
         processedImages = []
         
-        for image in images:
-            croppedImage = self.cropImages(image)
+        for stat, image in zip(stats, images):
+            print("Stats:")
+            print(stat)
+            image.save(f"tmp/unedited.png")
+            croppedImage = self.cropV2(image)
+            croppedImage.save(f"tmp/croppedImage.png")
             scaledImage = self.scaleImage(croppedImage)
+            scaledImage.save(f"tmp/scaledImage.png")
 
             processedImages.append(scaledImage)
         
         for i in range(len(processedImages)):
-            processedImages[i].save(f"tmp/processed{i}.jpeg")
+            processedImages[i].save(f"tmp/processed{i}.png")
         
         return processedImages
