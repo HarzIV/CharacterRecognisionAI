@@ -1,0 +1,82 @@
+import tkinter as tk
+from PIL import Image, ImageGrab
+
+from ImageManipulation import ImMan
+from ai import predictCharacter
+
+class GUI:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Charactor Recognition AI")
+        self.root.attributes("-fullscreen", True)
+
+        clearButton = tk.Button(self.root, text="Button")
+        clearButton.pack()
+
+        recogniseButton = tk.Button(self.root, text="Recognise")
+        recogniseButton.bind("<Button>", self.evaluateCanvas)
+        recogniseButton.pack()
+
+        self.drawingCanvas = tk.Canvas(
+            self.root,
+            bd = 2,
+            bg = 'white',
+            highlightthickness  = 1, 
+            # highlightbackground = 'white',
+            # width="fill",
+            height=350)
+        self.drawingCanvas.pack(fill=tk.X, expand=True, anchor="n")
+        
+        self.drawingCanvas.bind("<Button-1>", self.setPreviousXY)
+        self.drawingCanvas.bind("<B1-Motion>", self.paint)
+        # If right click is double clicked
+        self.drawingCanvas.bind("<Double-Button-3>", self.clearCanvas)
+
+        message = tk.Label(self.root, text="Press and Drag the mouse to draw")
+        message.pack(anchor="n")
+
+        self.previous_x = None
+        self.previous_y = None
+        
+    def setPreviousXY(self, event) -> None:
+        self.previous_x, self.previous_y = event.x, event.y
+        
+    def paint(self, event) -> None:
+        # python_green = "#476042"
+        
+        self.drawingCanvas.create_line(
+            self.previous_x, self.previous_y, event.x, event.y,
+            width=24, fill="#111827", capstyle="round", smooth=True)
+        
+        self.previous_x, self.previous_y = event.x, event.y
+    
+    def clearCanvas(self, event) -> None:
+        self.drawingCanvas.delete("all")
+        
+    def getCanvas(self) -> Image:
+        image = ImageGrab.grab((self.drawingCanvas.winfo_rootx(), self.drawingCanvas.winfo_rooty(), (self.drawingCanvas.winfo_rootx()+self.drawingCanvas.winfo_width()), (self.drawingCanvas.winfo_rooty()+self.drawingCanvas.winfo_height())))
+
+        return image
+    
+    def evaluateCanvas(self, event) -> None:
+        image = self.getCanvas()
+        ImMan.savePILImage(image)
+
+        processedImages = ImMan.getCharacterImages(image=image)
+
+        for image in processedImages:
+            predictions = predictCharacter("models/digit_model.h5", image)
+
+            percentage = max(predictions)
+            print(predictions)
+            print(percentage)
+
+            # print(f"The character is: {predictions.tolist().index(percentage)}, with a likelyhood of {percentage}%.")
+    
+    def run(self) -> None:
+        self.root.mainloop()
+
+
+if __name__=="__main__":
+    program = GUI()
+    program.run()
