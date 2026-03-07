@@ -6,8 +6,6 @@ If you want to run the code just follow these steps:
 - Open the the folder in vscode and create a virtual envirounment with python version 3.12.
 - Install the dependencies from the requirements.txt
 - Run the GUI.py file.
-## Windows specific
-If you are on windows you can download this [file](https://github.com/HarzIV/CharacterRecognisionAI/archive/refs/heads/main.zip) and extract it. TThen simply run the AI.exe file.
 # Important Info
 You can enter characters by pressing down left click and dragging the mouse over the canvas.
 ![alt text](image.png)
