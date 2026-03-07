@@ -1,3 +1,16 @@
 # CharacterRecognisionAI
-## Training Data Sources
-Some of the training data is taken from [this](https://github.com/Fabian-0000/DigitRecognitionAI) repository by **Fabian-0000**. The training data that was used from that repo was taken from this commit ```f7a7a2d7ad12e384fe9c5386bf78d17dc4c8d2b5```, aka *Removed Unnecessary Stuff*.  
+# How to run
+## Run the code
+If you want to run the code just follow these steps:
+- Download this [file](https://github.com/HarzIV/CharacterRecognisionAI/archive/refs/heads/main.zip) and extract it.
+- Open the the folder in vscode and create a virtual envirounment with python version 3.12.
+- Install the dependencies from the requirements.txt
+- Run the GUI.py file.
+## Windows specific
+If you are on windows you can download this [file](https://github.com/HarzIV/CharacterRecognisionAI/archive/refs/heads/main.zip) and extract it. TThen simply run the AI.exe file.
+# Important Info
+You can enter characters by pressing down left click and dragging the mouse over the canvas.
+![alt text](image.png)
+The canvas is the upper field.
+If you want to delete the numbers in the canvas simply double rightclick into it.  
+The different number CANNOT tough each other, otherwise the preprocessing breaks.
