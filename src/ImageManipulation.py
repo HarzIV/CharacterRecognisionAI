@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-from PIL import Image, ImageOps, ImageDraw
+from PIL import Image, ImageOps
+from os import listdir, path, remove
 
 class ImMan:
     @staticmethod
@@ -10,7 +11,7 @@ class ImMan:
     @staticmethod
     def saveMatrixAsImg(matrix: np.ndarray):
         image = Image.fromarray(matrix)
-        image.save("tmp/Prepared.jpeg")
+        image.save("tmp/Prepared.png")
 
     @classmethod
     def findPixelGroups(self, image: Image) -> np.ndarray:
@@ -48,7 +49,7 @@ class ImMan:
             image = ImageOps.invert(image) # Invert the color again
             print(type(image))
 
-            image.save(f"tmp/group{labelNumber}.jpeg")
+            # image.save(f"tmp/group{labelNumber}.jpeg")
             images.append(image)
         
         # images = np.array(images)
@@ -69,17 +70,8 @@ class ImMan:
     @classmethod
     def cropImages(self, image: Image, stat: np.ndarray) -> Image:
         boundingBox = self.findBoundingBox(stat)
-        print(boundingBox)
         croppedImage = image.crop(boundingBox)
         
-        
-        x1, y1, x2, y2 = boundingBox
-        rect =  [x1, y1, x2, y2]
-        draw = ImageDraw.Draw(image)
-        draw.rectangle(rect, outline="red", width=3)
-        image.save(f"tmp/boxDrawn.png")
-
-
         return croppedImage
     
     @staticmethod
@@ -93,7 +85,7 @@ class ImMan:
         # Find bounding box of non-white pixels
         for y in range(BORDER, h - BORDER):
             for x in range(BORDER, w - BORDER):
-                print("Pixels: ", pixels[x, y])
+                # print("Pixels: ", pixels[x, y])
                 value = pixels[x, y]
                 if value != 255:
                     rx1 = min(rx1, x)
@@ -136,13 +128,19 @@ class ImMan:
 
         return scaledImage
     
+    @staticmethod
+    def deleteFiles(directory: str) -> None:
+        for f in listdir(directory):
+            remove(path.join(directory, f))
+    
     @classmethod
     def getCharacterImages(self, image: Image) -> list:
         num_labels, labels, stats, centroids = self.findPixelGroups(image)
-        print(stats)
-        stats = stats[1:]
-        print(stats)
+        # print(stats)
+        stats = stats[1:] # Remove the first element, as thats the background.
+        # print(stats)
         
+        self.deleteFiles("tmp/processed/") # Delete files from previous process.
         images = self.isolateImages(labels, num_labels)
 
         processedImages = []
@@ -159,6 +157,6 @@ class ImMan:
             processedImages.append(scaledImage)
         
         for i in range(len(processedImages)):
-            processedImages[i].save(f"tmp/processed{i}.png")
+            processedImages[i].save(f"tmp/processed/processed{i}.png")
         
         return processedImages

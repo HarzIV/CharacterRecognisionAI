@@ -4,15 +4,13 @@ from numpy import argmax
 
 from ImageManipulation import ImMan
 from ai import predictCharacter
+from plot import Graph
 
 class GUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Charactor Recognition AI")
         self.root.attributes("-fullscreen", True)
-
-        clearButton = tk.Button(self.root, text="Button")
-        clearButton.pack()
 
         recogniseButton = tk.Button(self.root, text="Recognise")
         recogniseButton.bind("<Button>", self.evaluateCanvas)
@@ -33,8 +31,13 @@ class GUI:
         # If right click is double clicked
         self.drawingCanvas.bind("<Double-Button-3>", self.clearCanvas)
 
-        message = tk.Label(self.root, text="Press and Drag the mouse to draw")
-        message.pack(anchor="n")
+        # Info message at the bottom
+        # message = tk.Label(self.root, text="Press and Drag the mouse to draw")
+        # message.pack(anchor="n")
+        
+        # Create the class instance for the probability graphs
+        self.probabilityGraph = Graph(self.root)
+        # self.probabilityGraph.graphTkWidget.pack(anchor="w")
 
         self.previous_x = None
         self.previous_y = None
@@ -58,22 +61,34 @@ class GUI:
         image = ImageGrab.grab((self.drawingCanvas.winfo_rootx(), self.drawingCanvas.winfo_rooty(), (self.drawingCanvas.winfo_rootx()+self.drawingCanvas.winfo_width()), (self.drawingCanvas.winfo_rooty()+self.drawingCanvas.winfo_height())))
 
         return image
+    
+    def printPredictions(self, predictedCharacters: list) -> None:
+        pass
 
     def evaluateCanvas(self, event) -> None:
         image = self.getCanvas()
         ImMan.savePILImage(image)
 
         processedImages = ImMan.getCharacterImages(image=image)
+        
 
+        # Pipe the images through the AI model to get predictions
+        predictedCharacters = []
+        groupProbabilities = []
         for image in processedImages:
-            predictions = predictCharacter("models/digit_model.keras", image)
+            probabilities = predictCharacter("models/digit_model.keras", image)
 
-            # percentage = max(predictions)
-            print(predictions)
-            print(argmax(predictions))
+            print(probabilities[0])
+            
+            groupProbabilities.append(probabilities[0])
 
-            # print(f"The character is: {predictions.tolist().index(percentage)}, with a likelyhood of {percentage}%.")
-    
+            predictedCharacters.append(argmax(probabilities))
+
+        print(predictedCharacters)
+        print(type(groupProbabilities[0]))
+        
+        self.root.after(500, lambda: self.probabilityGraph.play_sequence(groupProbabilities))
+
     def run(self) -> None:
         self.root.mainloop()
 
