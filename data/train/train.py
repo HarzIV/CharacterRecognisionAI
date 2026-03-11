@@ -38,4 +38,4 @@ model.compile(optimizer='adam',
 model.fit(train_ds, validation_data=val_ds, epochs=10)
 
 # 4. Save for future use
-model.save('models/digit_model.h5')
+model.save('models/digit_model.keras')
